@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 
-app = Flask(__name__, template_folder='MEMORIASJESUS')
+app = Flask(__name__)  # Usa a pasta padrão 'templates'
 
 @app.route("/")
 def home():
