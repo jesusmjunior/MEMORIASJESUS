@@ -12,8 +12,15 @@ os.makedirs("templates", exist_ok=True)
 DB_PATH = "db/jesus_chat_memorias.sqlite"
 
 st.set_page_config(page_title="Jesus Chat Memórias", layout="wide")
-st.title("✝️ Interface Central - Jesus Chat Memórias")
-st.write("Gerencie, visualize e explore suas memórias espirituais em um só lugar.")
+
+# Hero-style topo visual
+st.markdown("""
+    <div style='background-color: #00008B; padding: 2rem; border-radius: 10px; text-align: center;'>
+        <h1 style='color: white; font-size: 3rem;'>✝️ JESUS CHAT MEMÓRIAS</h1>
+        <p style='color: #87CEEB; font-size: 1.2rem;'>Transformando conversas em sabedoria espiritual</p>
+    </div>
+    <br>
+""", unsafe_allow_html=True)
 
 # Navegação principal
 aba = st.sidebar.radio("📂 Menu Principal", ["Início", "Processar JSON", "Memórias", "Clusters", "Entidades", "Grafo Semântico", "Métricas"])
@@ -31,7 +38,8 @@ if aba == "Início":
 
 elif aba == "Processar JSON":
     st.header("📤 Enviar JSON da Conversa")
-    file = st.file_uploader("Escolha o arquivo .json", type=["json"])
+    st.markdown("Faça o upload de um arquivo `.json` gerado por uma conversa com IA.")
+    file = st.file_uploader("Clique abaixo para enviar", type=["json"], label_visibility="collapsed")
     if file:
         try:
             data = json.load(file)
@@ -39,12 +47,16 @@ elif aba == "Processar JSON":
             result = processor.process_template(data)
             st.success("Memória processada!")
 
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("🎯 Tópicos", len(result['summary'].get('topics', [])))
+                st.metric("🧠 Entidades", len(result['summary'].get('entities', [])))
+            with col2:
+                st.metric("🔢 Tokens", result['metrics']['total_tokens'])
+                st.metric("📅 Data", result['metadata']['timestamp'])
+
             st.subheader("🧠 Resumo")
             st.markdown(result['summary']['brief'])
-
-            st.subheader("🔢 Métricas")
-            for k, v in result['metrics'].items():
-                st.text(f"{k.replace('_', ' ').capitalize()}: {v:.2f}")
 
             st.download_button("⬇️ Baixar HTML", data=result["html_view"], file_name="memoria.html")
 
@@ -57,7 +69,9 @@ elif aba == "Memórias":
     if not htmls:
         st.warning("Nenhuma memória encontrada.")
     for file in htmls:
-        st.markdown(f"- [{file}](memorias/{file})")
+        with st.expander(f"📄 {file}"):
+            st.markdown(f"- [Abrir no navegador](memorias/{file})", unsafe_allow_html=True)
+            st.code(open(f"memorias/{file}", encoding="utf-8").read()[:500] + "...", language='html')
 
 elif aba == "Clusters":
     st.header("🔷 Clusters de Tópicos")
