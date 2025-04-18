@@ -1,5 +1,13 @@
-#!/usr/bin/env python3
-"""
+from flask import Flask, render_template
+
+app = Flask(__name__)  # Usa a pasta padrão 'templates'
+
+@app.route("/")
+def home():
+    return render_template("memory.html")  # Está em /templates
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
 Servidor Web para Jesus Chat Memórias
 ------------------------------------
 Esta aplicação serve o site estático gerado pelo sistema Jesus Chat Memórias
