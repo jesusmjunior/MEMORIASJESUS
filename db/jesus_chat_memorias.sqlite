@@ -1,0 +1,157 @@
+import sqlite3
+import os
+
+# Caminho para o novo banco compatível com o modelo JSON
+structured_db_path = "/mnt/data/jesus_chat_memorias_structured.sqlite"
+
+# Criar o banco
+conn = sqlite3.connect(structured_db_path)
+cursor = conn.cursor()
+
+# Criar tabela de metadados da conversa
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS chats_metadata (
+    id TEXT PRIMARY KEY,
+    timestamp TEXT,
+    title TEXT,
+    platform TEXT,
+    model TEXT,
+    language TEXT,
+    duration_seconds INTEGER,
+    total_tokens INTEGER,
+    total_messages INTEGER,
+    tags TEXT
+)
+""")
+
+# Clusters
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS topic_clusters (
+    id TEXT PRIMARY KEY,
+    chat_id TEXT,
+    name TEXT,
+    keywords TEXT,
+    importance REAL,
+    message_ids TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+# Entidades
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS entities (
+    name TEXT,
+    chat_id TEXT,
+    type TEXT,
+    mentions INTEGER,
+    related_clusters TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+# Knowledge Graph - nodes
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS nodes (
+    id TEXT PRIMARY KEY,
+    chat_id TEXT,
+    label TEXT,
+    type TEXT,
+    weight REAL,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+# Knowledge Graph - edges
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS edges (
+    id TEXT PRIMARY KEY,
+    chat_id TEXT,
+    source TEXT,
+    target TEXT,
+    relationship TEXT,
+    weight REAL,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+# Mensagens da conversa
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS messages (
+    id TEXT PRIMARY KEY,
+    chat_id TEXT,
+    role TEXT,
+    content TEXT,
+    timestamp TEXT,
+    tokens INTEGER,
+    clusters TEXT,
+    sentiment TEXT,
+    intent TEXT,
+    key_points TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+# Artefatos
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS artifacts (
+    id TEXT PRIMARY KEY,
+    chat_id TEXT,
+    type TEXT,
+    language TEXT,
+    title TEXT,
+    message_id TEXT,
+    content_hash TEXT,
+    summary TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+# Resumo geral
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS summary (
+    chat_id TEXT PRIMARY KEY,
+    brief TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS summary_insights (
+    chat_id TEXT,
+    insight TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS summary_actions (
+    chat_id TEXT,
+    action TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS summary_technologies (
+    chat_id TEXT,
+    technology TEXT,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+# Métricas
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS metrics (
+    chat_id TEXT PRIMARY KEY,
+    problem_resolution_score REAL,
+    technical_accuracy REAL,
+    response_completeness REAL,
+    chat_efficiency REAL,
+    FOREIGN KEY(chat_id) REFERENCES chats_metadata(id)
+)
+""")
+
+conn.commit()
+conn.close()
+
+structured_db_path
