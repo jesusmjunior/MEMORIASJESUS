@@ -1,4 +1,52 @@
-#!/usr/bin/env python3
+background-color: #0047AB;
+                border-color: #0047AB;
+            }
+            
+            .btn-primary:hover {
+                background-color: #00008B;
+                border-color: #00008B;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="error-container">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <h1 class="error-title">Erro Interno</h1>
+            <p class="error-message">Ocorreu um erro inesperado. Nossa equipe já foi notificada.</p>
+            <a href="/" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Voltar para a Página Inicial
+            </a>
+        </div>
+    </body>
+    </html>
+    """
+    return render_template_string(html_500), 500
+
+def initialize_app():
+    """Inicializa o aplicativo, processando templates existentes e gerando páginas."""
+    try:
+        # Verificar se já existem memorias processadas
+        if not os.path.exists('index.html') and len(os.listdir(STATIC_FOLDER)) == 0:
+            # Processar templates existentes
+            if os.path.exists(UPLOAD_FOLDER) and os.listdir(UPLOAD_FOLDER):
+                print(f"Processando templates existentes em {UPLOAD_FOLDER}...")
+                process_directory(processor, UPLOAD_FOLDER)
+            
+            # Gerar página inicial
+            generate_index_html(processor)
+            print("Página inicial gerada.")
+    except Exception as e:
+        print(f"Erro na inicialização: {e}")
+
+if __name__ == '__main__':
+    # Inicializar
+    initialize_app()
+    
+    # Iniciar servidor
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)#!/usr/bin/env python3
 """
 Servidor Web para Jesus Chat Memórias
 ------------------------------------
@@ -14,13 +62,29 @@ from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory, render_template_string
 from werkzeug.utils import secure_filename
 
+# Configuração para o Railway
+# Definir diretórios para persistência no Railway
+DB_DIR = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', '') + '/db'
+MEMORIES_DIR = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', '') + '/memorias'
+TEMPLATES_DIR = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', '') + '/templates'
+
+# Criar diretórios se não existirem
+os.makedirs(DB_DIR, exist_ok=True)
+os.makedirs(MEMORIES_DIR, exist_ok=True)
+os.makedirs(TEMPLATES_DIR, exist_ok=True)
+
+# Configurar variáveis de ambiente para o processador
+os.environ['DB_PATH'] = os.path.join(DB_DIR, 'jesus_chat_memorias.sqlite')
+os.environ['MEMORIES_DIR'] = MEMORIES_DIR
+os.environ['TEMPLATES_DIR'] = TEMPLATES_DIR
+
 # Importar o processador de memórias
 from memory_processor import MemoriaChatProcessor, process_directory, generate_index_html
 
 # Configuração
-UPLOAD_FOLDER = 'templates'
+UPLOAD_FOLDER = TEMPLATES_DIR
 ALLOWED_EXTENSIONS = {'json'}
-STATIC_FOLDER = 'memorias'
+STATIC_FOLDER = MEMORIES_DIR
 
 app = Flask(__name__, static_folder=STATIC_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -671,7 +735,7 @@ def upload_page():
 @app.errorhandler(404)
 def page_not_found(e):
     """Página 404 personalizada."""
-    return render_template_string("""
+    html_404 = """
     <!DOCTYPE html>
     <html lang="pt-br">
     <head>
@@ -743,15 +807,59 @@ def page_not_found(e):
         </div>
     </body>
     </html>
-    """), 404
+    """
+    return render_template_string(html_404), 404
 
 @app.errorhandler(500)
 def server_error(e):
     """Página 500 personalizada."""
-    return render_template_string("""
+    html_500 = """
     <!DOCTYPE html>
     <html lang="pt-br">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Erro
+        <title>Erro Interno - JESUS CHAT MEMÓRIAS</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <style>
+            body {
+                font-family: 'Montserrat', sans-serif;
+                background-color: #f5f5f5;
+                color: #333;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+            
+            .error-container {
+                text-align: center;
+                max-width: 600px;
+                background-color: white;
+                border-radius: 10px;
+                padding: 40px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            }
+            
+            .error-icon {
+                font-size: 5rem;
+                color: #0047AB;
+                margin-bottom: 2rem;
+            }
+            
+            .error-title {
+                font-size: 2rem;
+                font-weight: 700;
+                margin-bottom: 1rem;
+            }
+            
+            .error-message {
+                font-size: 1.2rem;
+                margin-bottom: 2rem;
+                color: #666;
+            }
+            
+            .btn-primary {
+                background-
